@@ -1,7 +1,20 @@
 #!/usr/bin/env bash
-set -e
 
 echo "=== OpenCode HA Add-on Starting ==="
+
+# ---------------------------------------------------------------------------
+# Source s6 container environment
+#
+# Docker env vars are NOT inherited by services in HA's s6-based containers.
+# We source them from the s6 container environment directory. The Supervisor
+# token is injected as HASSIO_TOKEN — we normalize to SUPERVISOR_TOKEN.
+# ---------------------------------------------------------------------------
+if [ -d /run/s6/container_environment ]; then
+    for f in /run/s6/container_environment/*; do
+        export "$(basename "$f")=$(cat "$f")"
+    done
+fi
+export SUPERVISOR_TOKEN="${SUPERVISOR_TOKEN:-$HASSIO_TOKEN}"
 
 # ---------------------------------------------------------------------------
 # 1. Read add-on options
