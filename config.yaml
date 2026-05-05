@@ -1,5 +1,5 @@
 name: OpenCode
-version: "1.0.0"
+version: "1.1.0"
 slug: opencode
 description: OpenCode AI coding assistant for Home Assistant — accessible via sidebar with full HA entity access
 url: https://github.com/drakonizer/opencode-ha-addon
@@ -24,11 +24,15 @@ options:
   api_key: ""
   model: ""
   small_model: ""
+  ollama_host: ""
+  ollama_keep_alive: ""
   github_token: ""
 schema:
   provider: str
   api_key: "password?"
   model: "str?"
   small_model: "str?"
+  ollama_host: "str?"
+  ollama_keep_alive: "str?"
   github_token: "password?"
 boot: auto

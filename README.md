@@ -11,7 +11,7 @@ Run [OpenCode](https://opencode.ai) as a Home Assistant add-on — an AI coding 
 - **OpenCode in your sidebar** — full AI coding assistant accessible from anywhere you can reach HA (local, Nabu Casa, DuckDNS, etc.)
 - **No port forwarding** — uses HA's native ingress system
 - **Automatic HA integration** — [hass-mcp](https://github.com/seanblanchfield/hass-mcp) is pre-configured with the Supervisor token, so the AI can control entities, read states, and manage your smart home out of the box
-- **Multi-provider** — works with Anthropic, OpenAI, Google, and any other provider OpenCode supports
+- **Multi-provider** — works with Anthropic, OpenAI, Google, Ollama (local), and any other provider OpenCode supports
 - **Git-tracked config** — automatically initializes git in your `/config` directory
 
 ## Quick Start
@@ -44,6 +44,11 @@ api_key: sk-...
 # Google
 provider: google
 api_key: AIza...
+
+# Ollama (local — no API key needed)
+provider: ollama
+ollama_host: "http://homeassistant:11434"
+model: "qwen3:8b"
 ```
 
 You can optionally override the model:
@@ -91,10 +96,12 @@ The `SUPERVISOR_TOKEN` is a short-lived JWT automatically injected by Home Assis
 
 | Option | Required | Default | Description |
 |---|---|---|---|
-| `provider` | Yes | `anthropic` | LLM provider (`anthropic`, `openai`, `google`) |
-| `api_key` | Yes | — | API key for the selected provider |
+| `provider` | Yes | `anthropic` | LLM provider (`anthropic`, `openai`, `google`, `ollama`) |
+| `api_key` | Varies | — | API key for cloud providers (not needed for Ollama) |
 | `model` | No | Auto | Model ID override (auto-detected from provider if empty) |
 | `small_model` | No | Auto | Fast model for simple tasks |
+| `ollama_host` | If Ollama | — | Ollama server URL (e.g. `http://homeassistant:11434`) |
+| `ollama_keep_alive` | No | — | How long Ollama keeps models in memory (e.g. `5m`, `24h`, `-1` for forever) |
 | `github_token` | No | — | GitHub Personal Access Token (enables GitHub MCP for repo management) |
 
 ### Default Models
@@ -104,8 +111,40 @@ The `SUPERVISOR_TOKEN` is a short-lived JWT automatically injected by Home Assis
 | Anthropic | `claude-sonnet-4-20250514` |
 | OpenAI | `gpt-4o` |
 | Google | `gemini-2.0-flash` |
+| Ollama | `qwen3:8b` |
 
 OpenCode supports additional providers (Amazon Bedrock, Azure, etc.) — see [OpenCode docs](https://opencode.ai/docs) for advanced provider configuration.
+
+### Ollama Setup
+
+Ollama lets you run LLMs entirely locally — no API keys, no cloud, no costs. You need an Ollama server accessible from the add-on container.
+
+**Common setups:**
+
+| Ollama Location | `ollama_host` value |
+|---|---|
+| Same machine (host_network add-on or bare metal) | `http://homeassistant:11434` |
+| Another machine on LAN | `http://192.168.x.x:11434` |
+| Ollama HA add-on (internal port) | `http://<addon-slug>:11434` |
+
+**Recommended models for HA automation:**
+
+| Model | VRAM | Good for |
+|---|---|---|
+| `qwen3:8b` | ~6 GB | Best balance of speed + capability |
+| `qwen3:14b` | ~10 GB | Stronger reasoning |
+| `llama3.2:3b` | ~3 GB | Fast, lightweight tasks |
+| `deepseek-coder-v2:16b` | ~12 GB | Code-heavy automation |
+
+**Example config (same machine):**
+
+```yaml
+provider: ollama
+ollama_host: "http://homeassistant:11434"
+model: "qwen3:8b"
+small_model: "qwen3:8b"
+ollama_keep_alive: "5m"
+```
 
 ## Architecture Support
 

@@ -25,6 +25,8 @@ PROVIDER=$(jq -r '.provider // "anthropic"' "$OPTIONS")
 API_KEY=$(jq -r '.api_key // ""' "$OPTIONS")
 MODEL=$(jq -r '.model // ""' "$OPTIONS")
 SMALL_MODEL=$(jq -r '.small_model // ""' "$OPTIONS")
+OLLAMA_HOST=$(jq -r '.ollama_host // ""' "$OPTIONS")
+OLLAMA_KEEP_ALIVE=$(jq -r '.ollama_keep_alive // ""' "$OPTIONS")
 GITHUB_TOKEN=$(jq -r '.github_token // ""' "$OPTIONS")
 
 # ---------------------------------------------------------------------------
@@ -54,6 +56,61 @@ case "$PROVIDER" in
     DEFAULT_SMALL="google/gemini-2.0-flash"
     [ -n "$API_KEY" ] && export GOOGLE_API_KEY="$API_KEY"
     PROVIDER_CONFIG='"google": {}'
+    ;;
+  ollama)
+    # -------------------------------------------------------------------------
+    # Ollama — local LLM inference via OpenAI-compatible API
+    #
+    # ollama_host:       URL of the Ollama server (required)
+    # ollama_keep_alive: How long Ollama keeps models loaded (e.g. "5m", "24h")
+    # model:            Ollama model name (e.g. "qwen3:8b", "llama3.2")
+    # small_model:      Fast model for simple tasks (defaults to same as model)
+    #
+    # Common ollama_host values:
+    #   - http://homeassistant:11434   (Ollama on same machine, host_network)
+    #   - http://192.168.x.x:11434    (Ollama on another machine)
+    #   - http://<addon-slug>:11434    (Ollama as HA add-on, internal port)
+    # -------------------------------------------------------------------------
+    DEFAULT_MODEL="ollama/qwen3:8b"
+    DEFAULT_SMALL="ollama/qwen3:8b"
+
+    if [ -z "$OLLAMA_HOST" ]; then
+        echo "ERROR: ollama_host is required when provider is 'ollama'"
+        echo "Set it to the URL of your Ollama server (e.g. http://homeassistant:11434)"
+        exit 1
+    fi
+
+    # Strip trailing slash from host URL
+    OLLAMA_HOST="${OLLAMA_HOST%/}"
+    OLLAMA_BASE_URL="${OLLAMA_HOST}/v1"
+
+    # Build keep_alive parameter for model fetch options
+    OLLAMA_FETCH_OPTS=""
+    if [ -n "$OLLAMA_KEEP_ALIVE" ]; then
+        OLLAMA_FETCH_OPTS=', "fetch": {"options": {"body": {"keep_alive": "'"${OLLAMA_KEEP_ALIVE}"'"}}}'
+    fi
+
+    # Resolve model names (strip 'ollama/' prefix if user included it)
+    RESOLVED_MODEL="${MODEL:-$DEFAULT_MODEL}"
+    RESOLVED_MODEL="${RESOLVED_MODEL#ollama/}"
+    RESOLVED_SMALL="${SMALL_MODEL:-$DEFAULT_SMALL}"
+    RESOLVED_SMALL="${RESOLVED_SMALL#ollama/}"
+
+    # Build models map — include both model and small_model if different
+    if [ "$RESOLVED_MODEL" = "$RESOLVED_SMALL" ]; then
+        MODELS_MAP="\"${RESOLVED_MODEL}\": {\"name\": \"${RESOLVED_MODEL}\"${OLLAMA_FETCH_OPTS}}"
+    else
+        MODELS_MAP="\"${RESOLVED_MODEL}\": {\"name\": \"${RESOLVED_MODEL}\"${OLLAMA_FETCH_OPTS}}, \"${RESOLVED_SMALL}\": {\"name\": \"${RESOLVED_SMALL}\"${OLLAMA_FETCH_OPTS}}"
+    fi
+
+    PROVIDER_CONFIG="\"ollama\": {\"npm\": \"@ai-sdk/openai-compatible\", \"name\": \"Ollama\", \"options\": {\"baseURL\": \"${OLLAMA_BASE_URL}\"}, \"models\": {${MODELS_MAP}}}"
+
+    # Override MODEL/SMALL_MODEL with ollama/ prefix for opencode.json
+    MODEL="ollama/${RESOLVED_MODEL}"
+    SMALL_MODEL="ollama/${RESOLVED_SMALL}"
+
+    echo "Ollama host: ${OLLAMA_HOST}"
+    [ -n "$OLLAMA_KEEP_ALIVE" ] && echo "Keep alive : ${OLLAMA_KEEP_ALIVE}"
     ;;
   *)
     echo "WARNING: Unknown provider '$PROVIDER' — falling back to anthropic"
