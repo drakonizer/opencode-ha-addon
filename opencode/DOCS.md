@@ -2,7 +2,7 @@
 
 ## Overview
 
-This add-on runs [OpenCode](https://opencode.ai) inside Home Assistant, accessible directly from the sidebar. It includes automatic integration with Home Assistant via the [hass-mcp](https://github.com/seanblanchfield/hass-mcp) MCP server, giving the AI assistant full access to your HA entities, automations, and configuration.
+This add-on runs [OpenCode](https://opencode.ai) inside Home Assistant, accessible directly from the sidebar. It includes automatic integration with Home Assistant via the [hass-mcp](https://github.com/voska/hass-mcp) MCP server, giving the AI assistant full access to your HA entities, automations, and configuration.
 
 ## Configuration
 

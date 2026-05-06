@@ -10,7 +10,7 @@ Run [OpenCode](https://opencode.ai) as a Home Assistant add-on — an AI coding 
 
 - **OpenCode in your sidebar** — full AI coding assistant accessible from anywhere you can reach HA (local, Nabu Casa, DuckDNS, etc.)
 - **No port forwarding** — uses HA's native ingress system
-- **Automatic HA integration** — [hass-mcp](https://github.com/seanblanchfield/hass-mcp) is pre-configured with the Supervisor token, so the AI can control entities, read states, and manage your smart home out of the box
+- **Automatic HA integration** — [hass-mcp](https://github.com/voska/hass-mcp) is pre-configured with the Supervisor token, so the AI can control entities, read states, and manage your smart home out of the box
 - **Multi-provider** — works with Anthropic, OpenAI, Google, Ollama (local), and any other provider OpenCode supports
 - **Git-tracked config** — automatically initializes git in your `/config` directory
 
@@ -198,7 +198,7 @@ git clone https://github.com/drakonizer/opencode-ha-addon opencode
 ## Credits
 
 - [OpenCode](https://opencode.ai) — the AI coding assistant
-- [hass-mcp](https://github.com/seanblanchfield/hass-mcp) — Home Assistant MCP server
+- [hass-mcp](https://github.com/voska/hass-mcp) — Home Assistant MCP server
 - [uv](https://github.com/astral-sh/uv) — Python package manager (runs hass-mcp)
 
 ## License
