@@ -250,9 +250,17 @@ echo "nginx config generated"
 
 # ---------------------------------------------------------------------------
 # 6. Start nginx + OpenCode
+#
+# XDG_STATE_HOME is set to /data/state so that OpenCode persists sessions,
+# conversation history, and other state across add-on restarts and HA reboots.
+# /data/ is the only directory that survives container recreation in HA add-ons.
 # ---------------------------------------------------------------------------
+export XDG_STATE_HOME="/data/state"
+mkdir -p "$XDG_STATE_HOME"
+
 nginx
 echo "nginx listening on port 8099 (ingress)"
 
 echo "Starting OpenCode server on 127.0.0.1:19876..."
+echo "Sessions persist at: ${XDG_STATE_HOME}/opencode/"
 exec opencode serve --hostname 127.0.0.1 --port 19876
